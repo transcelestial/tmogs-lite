@@ -1,9 +1,24 @@
 import cv2 as cv
 import datetime
+import argparse
 
+# construct the argument parse and parse the arguments
+ap = argparse.ArgumentParser(
+    description='First var: bool to show frames. Default is False./n\
+        Second var: int for x position of actual center, default is 720/n\
+        Third var: int for y position of actual center, default is 540')
 
-actual_center = (850, 900)  # FIXME need to add a setter + getter thingamagic
+ap.add_argument("boolframe", nargs='?', default=False, type=bool,
+                help="bool to show frames")
+ap.add_argument("w", nargs='?', default=720, type=int,
+                help="int x pos of defined center")
+ap.add_argument("h", nargs='?', default=540, type=int,
+                help="int y pos of defined center")
+
+args = vars(ap.parse_args())
+
 # determined center
+actual_center = (args["w"], args["h"])
 
 
 def compute_dist(frame, actual_center, final):
@@ -13,36 +28,38 @@ def compute_dist(frame, actual_center, final):
     str_y = str(round(y_error, 2))
     cv.line(frame, (int(final[0]), int(final[1])),
             actual_center, (255, 255, 255), 1)
-    cv.putText(
-        img=frame,
-        text="actual center:" +
-        str(round(actual_center[0], 2)) + ", " +
-        str(round(actual_center[1], 2)),
-        org=(100, 50),
-        fontFace=cv.FONT_HERSHEY_DUPLEX,
-        fontScale=1.0,
-        color=(255, 255, 255),
-        thickness=1
-    )
-    cv.putText(
-        img=frame,
-        text="beacon center: " +
-        str(round(final[0], 2)) + ", " + str(round(final[1], 2)),
-        org=(100, 100),
-        fontFace=cv.FONT_HERSHEY_DUPLEX,
-        fontScale=1.0,
-        color=(255, 255, 255),
-        thickness=1
-    )
-    cv.putText(
-        img=frame,
-        text="x_error: " + str_x + "    y_error: " + str_y,
-        org=(100, 150),
-        fontFace=cv.FONT_HERSHEY_DUPLEX,
-        fontScale=1.0,
-        color=(255, 255, 255),
-        thickness=1
-    )
+    print('X_error= ' + str_x)
+    print('Y_error= ' + str_y)
+    # cv.putText(
+    #     img=frame,
+    #     text="actual center:" +
+    #     str(round(actual_center[0], 2)) + ", " +
+    #     str(round(actual_center[1], 2)),
+    #     org=(100, 50),
+    #     fontFace=cv.FONT_HERSHEY_DUPLEX,
+    #     fontScale=1.0,
+    #     color=(255, 255, 255),
+    #     thickness=1
+    # )
+    # cv.putText(
+    #     img=frame,
+    #     text="beacon center: " +
+    #     str(round(final[0], 2)) + ", " + str(round(final[1], 2)),
+    #     org=(100, 100),
+    #     fontFace=cv.FONT_HERSHEY_DUPLEX,
+    #     fontScale=1.0,
+    #     color=(255, 255, 255),
+    #     thickness=1
+    # )
+    # cv.putText(
+    #     img=frame,
+    #     text="x_error: " + str_x + "    y_error: " + str_y,
+    #     org=(100, 150),
+    #     fontFace=cv.FONT_HERSHEY_DUPLEX,
+    #     fontScale=1.0,
+    #     color=(255, 255, 255),
+    #     thickness=1
+    # )
     return frame
 
 
@@ -50,7 +67,6 @@ def cropping(gray):
     # print("reso", gray.shape)
     height_gray = gray.shape[0]
     width_gray = gray.shape[1]
-    actual_center = (850, 900)
     padding = 25
     (minVal, maxVal, minLoc, maxLoc) = cv.minMaxLoc(gray)
     # print("maxLoc", maxLoc)
@@ -62,8 +78,8 @@ def cropping(gray):
     # print("bounding box", height_start, height_end, width_start, width_end)
 
     frame8 = cv.convertScaleAbs(gray, alpha=0.25)
-    crop_frame8 = frame8[height_start:height_end,
-                         width_start:width_end]  # height, width
+    # crop_frame8 = frame8[height_start:height_end,
+    #                      width_start:width_end]  # height, width
     # cv.imshow('crop 8', crop_frame8)
 
     crop_frame = gray[height_start:height_end,
@@ -91,7 +107,6 @@ def cropping(gray):
                             int(height_start+cY)), 20, 255, 1)
     tracking_frame = lined_frame
     return lined_frame
-    # cv.imshow('gray', lined_frame)
 
 
 def start_demo_tracking_callback():
@@ -115,11 +130,12 @@ def start_demo_tracking_callback():
                 print("Can't receive frame (stream end?). Exiting ...")
                 break
 
-            # lined_frame = cropping(frame)
+            lined_frame = cropping(frame)
 
-            # cv.imshow('gray', lined_frame)
-            # if cv.waitKey(1) == ord('q'):
-            #     break
+            if args["boolframe"]:
+                cv.imshow('gray', lined_frame)
+            if cv.waitKey(1) == ord('q'):
+                break
 
             n_frames += 1
 
