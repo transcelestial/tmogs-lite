@@ -23,13 +23,14 @@ args = vars(ap.parse_args())
 actual_center = (args["w"], args["h"])
 
 data_folder = Path(__file__).parent / 'data'
+data_suffix = '.csv'
 data_filename = 'csvdata'
-data_file = data_folder / data_filename
+data_file = data_folder / data_filename 
 if data_file.exists():
     print('File name clash. Iterating...')
     append = 1
     while data_file.exists():
-        data_file = data_folder / (data_filename + str(append))
+        data_file = data_folder / (data_filename + str(append) + data_suffix)
         append += 1
     print('Found allowable file: '+str(data_file))
 
