@@ -1,6 +1,8 @@
 import cv2 as cv
 import datetime
 import argparse
+from csv import writer as csv_write
+from pathlib import Path
 
 # construct the argument parse and parse the arguments
 ap = argparse.ArgumentParser(
@@ -20,6 +22,22 @@ args = vars(ap.parse_args())
 # determined center
 actual_center = (args["w"], args["h"])
 
+data_folder = Path(__file__).parent / 'data'
+data_filename = 'csvdata'
+data_file = data_folder / data_filename
+if data_file.exists():
+    print('File name clash. Iterating...')
+    append = 1
+    while data_file.exists():
+        data_file = data_folder / (data_filename + str(append))
+        append += 1
+    print('Found allowable file: '+str(data_file))
+
+with open(data_file, 'w') as file:
+        writer = csv_write(file)
+        writer.writerow(['T_ELAPSED', 'X_ERROR', 'Y_ERROR'])
+
+start = datetime.datetime.now()
 
 def compute_dist(frame, actual_center, final):
     x_error = final[0] - actual_center[0]  # print it out
@@ -30,36 +48,41 @@ def compute_dist(frame, actual_center, final):
             actual_center, (255, 255, 255), 1)
     print('X_error= ' + str_x)
     print('Y_error= ' + str_y)
-    # cv.putText(
-    #     img=frame,
-    #     text="actual center:" +
-    #     str(round(actual_center[0], 2)) + ", " +
-    #     str(round(actual_center[1], 2)),
-    #     org=(100, 50),
-    #     fontFace=cv.FONT_HERSHEY_DUPLEX,
-    #     fontScale=1.0,
-    #     color=(255, 255, 255),
-    #     thickness=1
-    # )
-    # cv.putText(
-    #     img=frame,
-    #     text="beacon center: " +
-    #     str(round(final[0], 2)) + ", " + str(round(final[1], 2)),
-    #     org=(100, 100),
-    #     fontFace=cv.FONT_HERSHEY_DUPLEX,
-    #     fontScale=1.0,
-    #     color=(255, 255, 255),
-    #     thickness=1
-    # )
-    # cv.putText(
-    #     img=frame,
-    #     text="x_error: " + str_x + "    y_error: " + str_y,
-    #     org=(100, 150),
-    #     fontFace=cv.FONT_HERSHEY_DUPLEX,
-    #     fontScale=1.0,
-    #     color=(255, 255, 255),
-    #     thickness=1
-    # )
+    time_elapsed = datetime.datetime.now() - start
+    with open(data_file, 'a') as file:
+        writer = csv_write(file)
+        writer.writerow([time_elapsed, x_error, y_error]) 
+
+    cv.putText(
+        img=frame,
+        text="actual center:" +
+        str(round(actual_center[0], 2)) + ", " +
+        str(round(actual_center[1], 2)),
+        org=(100, 50),
+        fontFace=cv.FONT_HERSHEY_DUPLEX,
+        fontScale=1.0,
+        color=(255, 255, 255),
+        thickness=1
+    )
+    cv.putText(
+        img=frame,
+        text="beacon center: " +
+        str(round(final[0], 2)) + ", " + str(round(final[1], 2)),
+        org=(100, 100),
+        fontFace=cv.FONT_HERSHEY_DUPLEX,
+        fontScale=1.0,
+        color=(255, 255, 255),
+        thickness=1
+    )
+    cv.putText(
+        img=frame,
+        text="x_error: " + str_x + "    y_error: " + str_y,
+        org=(100, 150),
+        fontFace=cv.FONT_HERSHEY_DUPLEX,
+        fontScale=1.0,
+        color=(255, 255, 255),
+        thickness=1
+    )
     return frame
 
 
@@ -110,6 +133,8 @@ def cropping(gray):
 
 
 def start_demo_tracking_callback():
+    
+    
     try:
         print('Starting demo tracking')
 
@@ -121,7 +146,7 @@ def start_demo_tracking_callback():
         if not camera.isOpened():
             print("Cannot open camera")
             return
-        start = datetime.datetime.now()
+        
         n_frames = 0
         while True:
             ret, frame = camera.read()  # Capture frame-by-frame
