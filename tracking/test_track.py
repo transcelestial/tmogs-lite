@@ -33,6 +33,9 @@ if data_file.exists():
         data_file = data_folder / (data_filename + str(append) + data_suffix)
         append += 1
     print('Found allowable file: '+str(data_file))
+else:
+    data_file = data_folder / (data_filename + data_suffix)
+    print('Saving in: '+str(data_file))
 
 with open(data_file, 'w') as file:
         writer = csv_write(file)
